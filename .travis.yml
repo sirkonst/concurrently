@@ -2,5 +2,6 @@ sudo: false
 language: python
 python:
   - "3.5"
-install: pip install tox-travis
+install:
+  - pip install -U tox tox-travis pbr setuptools
 script: make test

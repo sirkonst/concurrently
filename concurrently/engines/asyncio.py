@@ -1,5 +1,5 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from typing import Callable, List
 
 from . import AbstractEngine, AbstractWaiter
@@ -42,11 +42,14 @@ class AsyncIOEngine(AbstractEngine):
         return AsyncIOWaiter(fs=fs, loop=self.loop)
 
 
-class AsyncIOThreadEngine(AsyncIOEngine):
+class AsyncIOExecutorEngine(AsyncIOEngine):
 
-    def __init__(self, *, loop=None):
+    def __init__(self, *, loop=None, executor=None):
+        assert not isinstance(executor, ProcessPoolExecutor), \
+            'ProcessPoolExecutor is not supported'
+
         super().__init__(loop=loop)
-        self.pool = ThreadPoolExecutor()  # TODO: shutdown pool
+        self.pool = executor
 
     def create_task(self, fn: Callable[[], None]) -> asyncio.Future:
         return self.loop.run_in_executor(self.pool, fn)
