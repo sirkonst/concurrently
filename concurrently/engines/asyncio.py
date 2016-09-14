@@ -9,24 +9,34 @@ from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 class AsyncIOWaiter(AbstractWaiter):
 
     def __init__(self, fs: List[asyncio.Future], loop: asyncio.BaseEventLoop):
-        self.fs = fs
-        self.loop = loop
+        self._fs = fs
+        self._loop = loop
 
-    async def __call__(self, *, suppress_exceptions=False):
-        await asyncio.wait(self.fs, loop=self.loop)
+    async def __call__(self, *, suppress_exceptions=False, fail_hard=False):
+        when = asyncio.FIRST_EXCEPTION if fail_hard else asyncio.ALL_COMPLETED
+        done, pending = await asyncio.wait(
+            self._fs, loop=self._loop, return_when=when
+        )
+
+        if fail_hard:
+            f = next(filter(lambda x: x.exception(), done), None)
+            if f:
+                [p.cancel() for p in pending]
+                await asyncio.wait(pending, loop=self._loop)
+                raise f.exception()
 
         if not suppress_exceptions and self.exceptions():
             raise UnhandledExceptions(self.exceptions())
 
     async def stop(self):
-        for f in self.fs:
+        for f in self._fs:
             f.cancel()
         await self(suppress_exceptions=True)
 
     @lru_cache()
     def exceptions(self) -> List[Exception]:
         exc_list = []
-        for f in self.fs:
+        for f in self._fs:
             if f.cancelled():
                 continue
 

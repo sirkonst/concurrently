@@ -12,7 +12,8 @@ class AbstractEngine(metaclass=abc.ABCMeta):
 class AbstractWaiter(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def __call__(self, *, suppress_exceptions: bool=False):
+    def __call__(self, *,
+                 suppress_exceptions: bool=False, fail_hard: bool=False):
         raise NotImplementedError
 
     @abc.abstractmethod

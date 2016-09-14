@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+0.6.0
+-----
+
+* Refact KillableThread
+* New option fail_hard for Waiter
+* Automatic deploy by travis-ci
+
 0.5.0
 -----
 
