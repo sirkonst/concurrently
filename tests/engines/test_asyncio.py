@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from concurrently import concurrently, AsyncIOEngine
+from concurrently import concurrently, AsyncIOEngine, UnhandledExceptions
 
 
 async def process(data, *, loop):
@@ -67,6 +67,24 @@ async def test_stop(event_loop):
 async def test_exception(event_loop):
     data = range(2)
     i_data = iter(data)
+
+    @concurrently(2, engine=AsyncIOEngine, loop=event_loop)
+    async def _parallel():
+        for d in i_data:
+            if d == 1:
+                raise RuntimeError()
+
+    with pytest.raises(UnhandledExceptions) as exc:
+        await _parallel()
+
+    assert len(exc.value.exceptions) == 1
+    assert isinstance(exc.value.exceptions[0], RuntimeError)
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_exception_suppress(event_loop):
+    data = range(2)
+    i_data = iter(data)
     results = {}
     start_time = time.time()
 
@@ -78,7 +96,7 @@ async def test_exception(event_loop):
             res = await process(d, loop=event_loop)
             results[d] = res
 
-    await _parallel()
+    await _parallel(suppress_exceptions=True)
 
     assert len(results) == 1
     assert int(results[0]) == int(start_time)

@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from concurrently import concurrently, ProcessEngine
+from concurrently import concurrently, ProcessEngine, UnhandledExceptions
 
 
 def process(data):
@@ -80,6 +80,26 @@ def test_exception():
     q_data = Queue()
     for d in data:
         q_data.put(d)
+
+    @concurrently(2, engine=ProcessEngine)
+    def _parallel():
+        while not q_data.empty():
+            d = q_data.get()
+            if d == 1:
+                raise RuntimeError()
+
+    with pytest.raises(UnhandledExceptions) as exc:
+        _parallel()
+
+    assert len(exc.value.exceptions) == 1
+    assert isinstance(exc.value.exceptions[0], RuntimeError)
+
+
+def test_exception_suppress():
+    data = range(2)
+    q_data = Queue()
+    for d in data:
+        q_data.put(d)
     q_results = Queue()
     start_time = time.time()
 
@@ -92,7 +112,7 @@ def test_exception():
             res = process(d)
             q_results.put({d: res})
 
-    _parallel()
+    _parallel(suppress_exceptions=True)
 
     results = {}
     while not q_results.empty():

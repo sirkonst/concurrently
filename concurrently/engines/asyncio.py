@@ -1,8 +1,9 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from functools import lru_cache
 from typing import Callable, List
 
-from . import AbstractEngine, AbstractWaiter
+from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 
 class AsyncIOWaiter(AbstractWaiter):
@@ -11,17 +12,24 @@ class AsyncIOWaiter(AbstractWaiter):
         self.fs = fs
         self.loop = loop
 
-    async def __call__(self):
+    async def __call__(self, *, suppress_exceptions=False):
         await asyncio.wait(self.fs, loop=self.loop)
+
+        if not suppress_exceptions and self.exceptions():
+            raise UnhandledExceptions(self.exceptions())
 
     async def stop(self):
         for f in self.fs:
             f.cancel()
-        await self()
+        await self(suppress_exceptions=True)
 
+    @lru_cache()
     def exceptions(self) -> List[Exception]:
         exc_list = []
         for f in self.fs:
+            if f.cancelled():
+                continue
+
             exc = f.exception()
             if exc:
                 exc_list.append(exc)

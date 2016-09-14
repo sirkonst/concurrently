@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from concurrently import concurrently, ThreadEngine
+from concurrently import concurrently, ThreadEngine, UnhandledExceptions
 
 
 def process(data):
@@ -63,6 +63,23 @@ def test_stop():
 def test_exception():
     data = range(2)
     i_data = iter(data)
+
+    @concurrently(2, engine=ThreadEngine)
+    def _parallel():
+        for d in i_data:
+            if d == 1:
+                raise RuntimeError()
+
+    with pytest.raises(UnhandledExceptions) as exc:
+        _parallel()
+
+    assert len(exc.value.exceptions) == 1
+    assert isinstance(exc.value.exceptions[0], RuntimeError)
+
+
+def test_exception_suppress():
+    data = range(2)
+    i_data = iter(data)
     results = {}
     start_time = time.time()
 
@@ -74,7 +91,7 @@ def test_exception():
             res = process(d)
             results[d] = res
 
-    _parallel()
+    _parallel(suppress_exceptions=True)
 
     assert len(results) == 1
     assert int(results[0]) == int(start_time)

@@ -5,7 +5,9 @@ from queue import Queue
 
 import pytest
 
-from concurrently import concurrently, AsyncIOExecutorEngine
+from concurrently import (
+    concurrently, AsyncIOExecutorEngine, UnhandledExceptions
+)
 
 
 def process(data):
@@ -90,6 +92,27 @@ async def test_stop(executor, event_loop):
 async def test_exception(executor, event_loop):
     data = range(2)
     i_data = iter(data)
+
+    @concurrently(
+        2, engine=AsyncIOExecutorEngine, loop=event_loop, executor=executor
+    )
+    def _parallel():
+        for d in i_data:
+            if d == 1:
+                raise RuntimeError()
+
+    with pytest.raises(UnhandledExceptions) as exc:
+        await _parallel()
+
+    assert len(exc.value.exceptions) == 1
+    assert isinstance(exc.value.exceptions[0], RuntimeError)
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
+@paramz_executor
+async def test_exception_suppress(executor, event_loop):
+    data = range(2)
+    i_data = iter(data)
     results = {}
     start_time = time.time()
 
@@ -103,7 +126,7 @@ async def test_exception(executor, event_loop):
             res = process(d)
             results[d] = res
 
-    await _parallel()
+    await _parallel(suppress_exceptions=True)
 
     assert len(results) == 1
     assert int(results[0]) == int(start_time)
