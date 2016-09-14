@@ -111,15 +111,19 @@ ThreadPoolEngine
 
 Concurrently run code in system threads by use ``concurrent.futures.ThreadPoolExecutor``::
 
+    from concurrent.futures import ThreadPoolExecutor
     from concurrently import concurrently, ThreadPoolEngine
 
     ...
-    @concurrently(2, engine=ThreadPoolEngine)
+    pool = ThreadPoolExecutor()
+
+    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
     def fetch_urls():
         ...
 
     fetch_urls()
 
+``pool`` is option for specifying custom pool otherwise will using default pool.
 
 Note: with this engine ``stop()`` is not work correctly.
 

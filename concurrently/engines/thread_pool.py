@@ -12,7 +12,6 @@ class ThreadPoolWaiter(AbstractWaiter):
 
     def __call__(self):
         wait(self.fs)
-        self.pool.shutdown()
 
     def stop(self):
         for f in self.fs:
@@ -24,10 +23,12 @@ class ThreadPoolWaiter(AbstractWaiter):
 
 
 class ThreadPoolEngine(AbstractEngine):
+    pool = ThreadPoolExecutor()
 
-    def __init__(self):
+    def __init__(self, *, pool: ThreadPoolExecutor=None):
         super().__init__()
-        self.pool = ThreadPoolExecutor()
+        if pool:
+            self.pool = pool
 
     def create_task(self, fn: Callable[[], None]) -> Future:
         return self.pool.submit(fn)

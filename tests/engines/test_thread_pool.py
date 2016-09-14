@@ -1,4 +1,5 @@
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -10,19 +11,26 @@ def process(data):
     return time.time()
 
 
+paramz_pool = pytest.mark.parametrize(
+    'pool', [None, ThreadPoolExecutor()],
+    ids=lambda v: 'pool %s' % type(v).__name__
+)
+
+
 @pytest.mark.parametrize(
     'conc_count', range(1, 5), ids=lambda v: 'counc %s' % v
 )
 @pytest.mark.parametrize(
     'data_count', range(1, 5), ids=lambda v: 'data %s' % v
 )
-def test_concurrently(conc_count, data_count):
+@paramz_pool
+def test_concurrently(conc_count, data_count, pool):
     data = range(data_count)
     i_data = iter(data)
     results = {}
     start_time = time.time()
 
-    @concurrently(conc_count, engine=ThreadPoolEngine)
+    @concurrently(conc_count, engine=ThreadPoolEngine, pool=pool)
     def _parallel():
         for d in i_data:
             res = process(d)
@@ -61,13 +69,14 @@ def test_stop():
     assert int(results[0]) == int(start_time)
 
 
-def test_exception():
+@paramz_pool
+def test_exception(pool):
     data = range(2)
     i_data = iter(data)
     results = {}
     start_time = time.time()
 
-    @concurrently(2, engine=ThreadPoolEngine)
+    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
     def _parallel():
         for d in i_data:
             if d == 1:
