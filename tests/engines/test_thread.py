@@ -99,3 +99,22 @@ def test_exception_suppress():
     exc_list = _parallel.exceptions()
     assert len(exc_list) == 1
     assert isinstance(exc_list[0], RuntimeError)
+
+
+def test_fail_hard():
+    i_data = iter(range(4))
+    results = {}
+
+    @concurrently(3, engine=ThreadEngine)
+    def _parallel():
+        for d in i_data:
+            if d == 1:
+                raise RuntimeError()
+            time.sleep(d)
+            results[d] = True
+
+    with pytest.raises(RuntimeError):
+        _parallel(fail_hard=True)
+
+    assert len(results) == 1
+    assert results[0]

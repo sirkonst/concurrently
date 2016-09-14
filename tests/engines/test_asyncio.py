@@ -104,3 +104,23 @@ async def test_exception_suppress(event_loop):
     exc_list = _parallel.exceptions()
     assert len(exc_list) == 1
     assert isinstance(exc_list[0], RuntimeError)
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_fail_hard(event_loop):
+    i_data = iter(range(4))
+    results = {}
+
+    @concurrently(3, engine=AsyncIOEngine, loop=event_loop)
+    async def _parallel():
+        for d in i_data:
+            if d == 1:
+                raise RuntimeError()
+            await asyncio.sleep(d, loop=event_loop)
+            results[d] = True
+
+    with pytest.raises(RuntimeError):
+        await _parallel(fail_hard=True)
+
+    assert len(results) == 1
+    assert results[0]

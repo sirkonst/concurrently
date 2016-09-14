@@ -137,6 +137,29 @@ async def test_exception_suppress(executor, event_loop):
 
 
 @pytest.mark.asyncio(forbid_global_loop=True)
+@paramz_executor
+async def test_fail_hard(executor, event_loop):
+    i_data = iter(range(4))
+    results = {}
+
+    @concurrently(
+        3, engine=AsyncIOExecutorEngine, loop=event_loop, executor=executor
+    )
+    def _parallel():
+        for d in i_data:
+            if d == 1:
+                raise RuntimeError()
+            time.sleep(d)
+            results[d] = True
+
+    with pytest.raises(RuntimeError):
+        await _parallel(fail_hard=True)
+
+    assert len(results) == 1
+    assert results[0]
+
+
+@pytest.mark.asyncio(forbid_global_loop=True)
 async def test_processpool_isnot_supported(event_loop):
 
     with pytest.raises(AssertionError) as exc:

@@ -1,4 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor, Future, wait
+from concurrent.futures import (
+    ThreadPoolExecutor, Future, wait, ALL_COMPLETED, FIRST_EXCEPTION
+)
 from functools import lru_cache
 from typing import Callable, List
 
@@ -7,31 +9,37 @@ from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 class ThreadPoolWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[Future], pool: ThreadPoolExecutor):
-        self.fs = fs
-        self.pool = pool
+    def __init__(self, fs: List[Future]):
+        self._fs = fs
 
-    def __call__(self, *, suppress_exceptions=False):
-        wait(self.fs)
+    def __call__(self, *, suppress_exceptions=False, fail_hard=False):
+        when = FIRST_EXCEPTION if fail_hard else ALL_COMPLETED
+        done, pending = wait(self._fs, return_when=when)
+
+        if fail_hard:
+            f = next(filter(lambda x: x.exception(), done), None)
+            if f:
+                [p.cancel() for p in pending]
+                wait(pending)
+                raise f.exception()
 
         if not suppress_exceptions and self.exceptions():
             raise UnhandledExceptions(self.exceptions())
 
     def stop(self):
-        for f in self.fs:
+        for f in self._fs:
             f.cancel()
         self(suppress_exceptions=True)
 
     @lru_cache()
     def exceptions(self) -> List[Exception]:
-        return [f.exception() for f in self.fs if f.exception()]
+        return [f.exception() for f in self._fs if f.exception()]
 
 
 class ThreadPoolEngine(AbstractEngine):
     pool = ThreadPoolExecutor()
 
     def __init__(self, *, pool: ThreadPoolExecutor=None):
-        super().__init__()
         if pool:
             self.pool = pool
 
@@ -39,4 +47,4 @@ class ThreadPoolEngine(AbstractEngine):
         return self.pool.submit(fn)
 
     def waiter_factory(self, fs):
-        return ThreadPoolWaiter(fs, pool=self.pool)
+        return ThreadPoolWaiter(fs)

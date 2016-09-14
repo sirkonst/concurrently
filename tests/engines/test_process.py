@@ -124,3 +124,30 @@ def test_exception_suppress():
     exc_list = _parallel.exceptions()
     assert len(exc_list) == 1
     assert isinstance(exc_list[0], RuntimeError)
+
+
+def test_fail_hard():
+    data = range(2)
+    q_data = Queue()
+    for d in data:
+        q_data.put(d)
+    q_results = Queue()
+
+    @concurrently(2, engine=ProcessEngine)
+    def _parallel():
+        while not q_data.empty():
+            d = q_data.get()
+            if d == 1:
+                raise RuntimeError()
+            time.sleep(d)
+            q_results.put({d: True})
+
+    with pytest.raises(RuntimeError):
+        _parallel(fail_hard=True)
+
+    results = {}
+    while not q_results.empty():
+        results.update(q_results.get())
+
+    assert len(results) == 1
+    assert results[0]
