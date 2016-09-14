@@ -1,44 +1,24 @@
-import ctypes
 import threading
-import time
 from functools import lru_cache
 from queue import Queue
 from typing import Callable, List
 
+from concurrently.aux import kill_thread
 from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 
-# from https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
-class KillableThread(threading.Thread):
+class Thread(threading.Thread):
 
     def __init__(self, *a, result_q: Queue, **kw):
         super().__init__(*a, **kw)
         self._result_q = result_q
-
-    def kill(self, exc=SystemExit):
-        if not self.isAlive():
-            return False
-
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-            ctypes.c_long(self.ident), ctypes.py_object(exc))
-
-        if res == 0:
-            raise ValueError('nonexistent thread id')
-        elif res > 1:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident, None)
-            raise SystemError('PyThreadState_SetAsyncExc failed')
-
-        while self.isAlive():
-            time.sleep(0.01)
-
-        return True
 
     def run(self):
         try:
             super().run()
         except Exception as e:
             self._result_q.put(e)
-        except SystemExit:
+        except KeyboardInterrupt:
             self._result_q.put(None)
         else:
             self._result_q.put(None)
@@ -46,7 +26,7 @@ class KillableThread(threading.Thread):
 
 class ThreadWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[KillableThread], result_q: Queue):
+    def __init__(self, fs: List[Thread], result_q: Queue):
         self._fs = fs
         self._result_q = result_q
         self._exceptions = []
@@ -55,7 +35,7 @@ class ThreadWaiter(AbstractWaiter):
         for _ in range(len(self._fs)):
             exc = self._result_q.get()
             if exc and fail_hard:
-                [f.kill() for f in self._fs]
+                [kill_thread(f) for f in self._fs]
                 [f.join() for f in self._fs]
                 raise exc
             elif exc:
@@ -66,7 +46,7 @@ class ThreadWaiter(AbstractWaiter):
 
     def stop(self):
         for f in self._fs:
-            f.kill()
+            kill_thread(f)
         self(suppress_exceptions=True)
 
     @lru_cache()
@@ -79,8 +59,8 @@ class ThreadEngine(AbstractEngine):
     def __init__(self):
         self._result_q = Queue()
 
-    def create_task(self, fn: Callable[[], None]) -> KillableThread:
-        tr = KillableThread(target=fn, result_q=self._result_q)
+    def create_task(self, fn: Callable[[], None]) -> Thread:
+        tr = Thread(target=fn, result_q=self._result_q)
         tr.start()
         return tr
 

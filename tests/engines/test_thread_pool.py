@@ -50,13 +50,14 @@ def test_concurrently(conc_count, data_count, pool):
 
 
 @pytest.mark.skip('Threadpool cannot be stopped easily :(')
-def test_stop():
+@paramz_pool
+def test_stop(pool):
     data = range(3)
     i_data = iter(data)
     results = {}
     start_time = time.time()
 
-    @concurrently(2, engine=ThreadPoolEngine)
+    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
     def _parallel():
         for d in i_data:
             r = process(d)
