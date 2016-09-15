@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+0.7.0
+-----
+
+* Removed AsyncIOExecutorEngine and returned AsyncIOThreadEngine, removed ThreadPoolEngine
+* Fix deploy
+
 0.6.0
 -----
 

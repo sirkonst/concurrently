@@ -69,26 +69,19 @@ Default engine for concurrently run code as asyncio coroutines::
     await fetch_urls()
 
 
-AsyncIOExecutorEngine
----------------------
+AsyncIOThreadEngine
+-------------------
 
-Concurrently run code by asyncio executor::
+Concurrently run code in threads with asyncio::
 
-    from concurrent.futures import ThreadPoolExecutor
-    from concurrently import concurrently, AsyncIOExecutorEngine
+    from concurrently import concurrently, AsyncIOThreadEngine
 
     ...
-    my_pool = ThreadPoolExecutor()
-
-    @concurrently(2, engine=AsyncIOExecutorEngine, loop=loop, executor=my_pool)
+    @concurrently(2, engine=AsyncIOThreadEngine, loop=loop)
     def fetch_urls():  # not async def
         ...
 
     await fetch_urls()
-
-If ``executor`` is ``None`` or not set will using default asyncio executor.
-
-Note: ``ProcessPoolExecutor`` is not supported.
 
 
 ThreadEngine
@@ -104,28 +97,6 @@ Concurrently run code in system threads::
         ...
 
     fetch_urls()  # not await
-
-
-ThreadPoolEngine
-----------------
-
-Concurrently run code in system threads by use ``concurrent.futures.ThreadPoolExecutor``::
-
-    from concurrent.futures import ThreadPoolExecutor
-    from concurrently import concurrently, ThreadPoolEngine
-
-    ...
-    pool = ThreadPoolExecutor()
-
-    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
-    def fetch_urls():
-        ...
-
-    fetch_urls()
-
-``pool`` is option for specifying custom pool otherwise will using default pool.
-
-Note: with this engine ``stop()`` is not work correctly.
 
 
 ProcessEngine

@@ -1,9 +1,10 @@
+import asyncio
 import time
-from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
 
 import pytest
 
-from concurrently import concurrently, ThreadPoolEngine, UnhandledExceptions
+from concurrently import concurrently, AsyncIOThreadEngine, UnhandledExceptions
 
 
 def process(data):
@@ -11,32 +12,33 @@ def process(data):
     return time.time()
 
 
-paramz_pool = pytest.mark.parametrize(
-    'pool', [None, ThreadPoolExecutor()],
-    ids=lambda v: 'pool %s' % type(v).__name__
-)
-
-
+@pytest.mark.asyncio(forbid_global_loop=True)
 @pytest.mark.parametrize(
     'conc_count', range(1, 5), ids=lambda v: 'counc %s' % v
 )
 @pytest.mark.parametrize(
     'data_count', range(1, 5), ids=lambda v: 'data %s' % v
 )
-@paramz_pool
-def test_concurrently(conc_count, data_count, pool):
+async def test_concurrently(conc_count, data_count, event_loop):
     data = range(data_count)
-    i_data = iter(data)
-    results = {}
+    q_data = Queue()
+    for d in data:
+        q_data.put(d)
+    q_results = Queue()
     start_time = time.time()
 
-    @concurrently(conc_count, engine=ThreadPoolEngine, pool=pool)
+    @concurrently(conc_count, engine=AsyncIOThreadEngine, loop=event_loop)
     def _parallel():
-        for d in i_data:
+        while not q_data.empty():
+            d = q_data.get()
             res = process(d)
-            results[d] = res
+            q_results.put({d: res})
 
-    _parallel()
+    await _parallel()
+
+    results = {}
+    while not q_results.empty():
+        results.update(q_results.get())
 
     def calc_delta(n):
         if n // conc_count == 0:
@@ -49,53 +51,52 @@ def test_concurrently(conc_count, data_count, pool):
         assert int(delta) == calc_delta(n)
 
 
-@pytest.mark.skip('Threadpool cannot be stopped easily :(')
-@paramz_pool
-def test_stop(pool):
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_stop(event_loop):
     data = range(3)
     i_data = iter(data)
     results = {}
     start_time = time.time()
 
-    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
+    @concurrently(2, engine=AsyncIOThreadEngine, loop=event_loop)
     def _parallel():
         for d in i_data:
             r = process(d)
             results[d] = r
 
-    time.sleep(0.5)
-    _parallel.stop()
+    await asyncio.sleep(0.5, loop=event_loop)
+    await _parallel.stop()
 
     assert len(results) == 1
     assert int(results[0]) == int(start_time)
 
 
-@paramz_pool
-def test_exception(pool):
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_exception(event_loop):
     data = range(2)
     i_data = iter(data)
 
-    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
+    @concurrently(2, engine=AsyncIOThreadEngine, loop=event_loop)
     def _parallel():
         for d in i_data:
             if d == 1:
                 raise RuntimeError()
 
     with pytest.raises(UnhandledExceptions) as exc:
-        _parallel()
+        await _parallel()
 
     assert len(exc.value.exceptions) == 1
     assert isinstance(exc.value.exceptions[0], RuntimeError)
 
 
-@paramz_pool
-def test_exception_suppress(pool):
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_exception_suppress(event_loop):
     data = range(2)
     i_data = iter(data)
     results = {}
     start_time = time.time()
 
-    @concurrently(2, engine=ThreadPoolEngine, pool=pool)
+    @concurrently(2, engine=AsyncIOThreadEngine, loop=event_loop)
     def _parallel():
         for d in i_data:
             if d == 1:
@@ -103,7 +104,7 @@ def test_exception_suppress(pool):
             res = process(d)
             results[d] = res
 
-    _parallel(suppress_exceptions=True)
+    await _parallel(suppress_exceptions=True)
 
     assert len(results) == 1
     assert int(results[0]) == int(start_time)
@@ -113,13 +114,12 @@ def test_exception_suppress(pool):
     assert isinstance(exc_list[0], RuntimeError)
 
 
-@pytest.mark.skip('Threadpool cannot be stopped easily :(')
-@paramz_pool
-def test_fail_hard(pool):
+@pytest.mark.asyncio(forbid_global_loop=True)
+async def test_fail_hard(event_loop):
     i_data = iter(range(4))
     results = {}
 
-    @concurrently(3, engine=ThreadPoolEngine, pool=pool)
+    @concurrently(3, engine=AsyncIOThreadEngine, loop=event_loop)
     def _parallel():
         for d in i_data:
             if d == 1:
@@ -128,7 +128,7 @@ def test_fail_hard(pool):
             results[d] = True
 
     with pytest.raises(RuntimeError):
-        _parallel(fail_hard=True)
+        await _parallel(fail_hard=True)
 
     assert len(results) == 1
     assert results[0]
