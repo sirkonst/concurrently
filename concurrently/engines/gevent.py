@@ -1,7 +1,10 @@
 from functools import lru_cache
 from typing import Callable, List
 
-import gevent
+try:
+    import gevent
+except ImportError:
+    raise ImportError('gevent is not installed')
 
 from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
