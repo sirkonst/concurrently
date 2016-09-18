@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+0.8.0
+-----
+
+* Unification tests
+* Lazy import for engines
+* Add new GeventEngine
+
 0.7.0
 -----
 
