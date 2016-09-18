@@ -5,6 +5,10 @@ from typing import List
 class AbstractEngine(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
+    def create_task(self, fn):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def waiter_factory(self, fs) -> 'AbstractWaiter':
         raise NotImplementedError
 

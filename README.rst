@@ -112,3 +112,18 @@ Concurrently run code in system process::
         ...
 
     fetch_urls()
+
+
+GeventEngine
+-------------
+
+Concurrently run code as gevent greenlet::
+
+    from concurrently import concurrently, GeventEngine
+
+    ...
+    @concurrently(2, engine=GeventEngine)
+    def fetch_urls():
+        ...
+
+    fetch_urls()
