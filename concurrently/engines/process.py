@@ -1,3 +1,20 @@
+"""
+ProcessEngine
+-------------
+
+Runs code in system process::
+
+    from concurrently import concurrently, ProcessEngine
+
+    ...
+    @concurrently(2, engine=ProcessEngine)
+    def fetch_urls():
+        ...
+
+    fetch_urls()
+
+.. autoclass::  concurrently.ProcessEngine
+"""
 from multiprocessing import Queue, Process as _Process
 import os
 import signal
