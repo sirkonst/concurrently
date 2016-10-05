@@ -1,13 +1,3 @@
-.. -*- mode: rst -*-
-
-.. image:: https://travis-ci.org/sirkonst/concurrently.svg?branch=master
-    :alt: Build Status
-    :target: https://travis-ci.org/sirkonst/concurrently
-
-.. image:: https://coveralls.io/repos/github/sirkonst/concurrently/badge.svg?branch=master
-    :alt: Code Coverage
-    :target: https://coveralls.io/github/sirkonst/concurrently?branch=master
-
 Concurrently
 ============
 
@@ -50,7 +40,19 @@ Quick example::
         loop.run_until_complete(amain(loop))
 
 
-Documentation
--------------
 
-See https://concurrently.readthedocs.io/
+Decorator :func:`@concurrently` makes to main thinks:
+    * starts concurrent execution specified count of decorated function
+    * returns special :ref:`waiter` object to control the running functions
+
+By default, the code runs as asyncio coroutines, but there are other supported
+ways to execute, by specifying the argument `engine`.
+
+
+Details
+=======
+
+.. toctree::
+
+    waiter
+    engines

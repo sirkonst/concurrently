@@ -1,0 +1,6 @@
+name: py35
+dependencies:
+  - python=3.5
+  - setuptools>=17.1
+  - pbr>=1.9
+  - gevent

@@ -1,3 +1,26 @@
+"""
+GeventEngine
+------------
+
+Runs code as ``gevent`` greenlets::
+
+        from concurrently import concurrently, GeventEngine
+
+        ...
+        @concurrently(2, engine=GeventEngine)
+        def fetch_urls():
+            ...
+
+        fetch_urls()
+
+.. note::
+
+    You must install ``gevent`` module for use this engine::
+
+        $ pip install concurrently[gevent]
+
+.. autoclass:: concurrently.GeventEngine
+"""
 from functools import lru_cache
 from typing import Callable, List
 
