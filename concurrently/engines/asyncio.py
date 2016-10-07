@@ -90,6 +90,9 @@ class AsyncIOEngine(AbstractEngine):
         self.loop = loop or asyncio.get_event_loop()
 
     def create_task(self, fn: asyncio.coroutine) -> asyncio.Future:
+        assert asyncio.iscoroutine(fn), \
+            'Decorated function `{}` must be coroutine'.format(fn.__name__)
+
         return self.loop.create_task(fn())
 
     def waiter_factory(self, fs: List[asyncio.Future]):
