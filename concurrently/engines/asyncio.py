@@ -106,4 +106,9 @@ class AsyncIOThreadEngine(AsyncIOEngine):
     _pool = ThreadPoolExecutor()
 
     def create_task(self, fn: Callable[[], None]) -> asyncio.Future:
+        assert asyncio.iscoroutine(fn) is True, \
+            'Decorated function `{}` must be regular not a coroutine'.format(
+                fn.__name__
+            )
+
         return self.loop.run_in_executor(self._pool, fn)
