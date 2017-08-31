@@ -11,7 +11,7 @@ from . import EngineTest, paramz_conc_count, paramz_data_count
 
 def process(data):
     time.sleep(data)
-    return time.time()
+    return time.monotonic()
 
 
 class TestProcessEngine(EngineTest):
@@ -24,7 +24,7 @@ class TestProcessEngine(EngineTest):
         for d in data:
             q_data.put(d)
         q_results = Queue()
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(conc_count, engine=ProcessEngine)
         def _parallel():
@@ -59,7 +59,7 @@ class TestProcessEngine(EngineTest):
         for d in data:
             q_data.put(d)
         q_results = Queue()
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
@@ -111,7 +111,7 @@ class TestProcessEngine(EngineTest):
         for d in data:
             q_data.put(d)
         q_results = Queue()
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():

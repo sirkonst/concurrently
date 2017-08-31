@@ -9,7 +9,7 @@ from . import EngineTest, paramz_conc_count, paramz_data_count
 
 def process(data):
     time.sleep(data)
-    return time.time()
+    return time.monotonic()
 
 
 class TestThreadEngine(EngineTest):
@@ -20,7 +20,7 @@ class TestThreadEngine(EngineTest):
         data = range(data_count)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(conc_count, engine=ThreadEngine)
         def _parallel():
@@ -44,7 +44,7 @@ class TestThreadEngine(EngineTest):
         data = range(3)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=ThreadEngine)
         def _parallel():
@@ -78,7 +78,7 @@ class TestThreadEngine(EngineTest):
         data = range(2)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=ThreadEngine)
         def _parallel():

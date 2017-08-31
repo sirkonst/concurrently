@@ -11,7 +11,7 @@ from . import EngineTest, paramz_conc_count, paramz_data_count
 
 def process(data):
     gevent.sleep(data)
-    return time.time()
+    return time.monotonic()
 
 
 class TestGeventEngine(EngineTest):
@@ -22,7 +22,7 @@ class TestGeventEngine(EngineTest):
         data = range(data_count)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(conc_count, engine=GeventEngine)
         def _parallel():
@@ -46,7 +46,7 @@ class TestGeventEngine(EngineTest):
         data = range(3)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=GeventEngine)
         def _parallel():
@@ -80,7 +80,7 @@ class TestGeventEngine(EngineTest):
         data = range(2)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=GeventEngine)
         def _parallel():
