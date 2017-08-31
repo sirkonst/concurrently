@@ -1,4 +1,5 @@
 from multiprocessing import Queue
+from queue import Empty
 import time
 
 import pytest
@@ -27,8 +28,12 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(conc_count, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
                 res = process(d)
                 q_results.put({d: res})
 
@@ -58,8 +63,12 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
                 res = process(d)
                 q_results.put({d: res})
 
@@ -81,8 +90,12 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
                 if d == 1:
                     raise RuntimeError()
 
@@ -102,8 +115,12 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
                 if d == 1:
                     raise RuntimeError()
                 res = process(d)
@@ -131,8 +148,12 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
                 if d == 1:
                     raise RuntimeError()
                 time.sleep(d)
