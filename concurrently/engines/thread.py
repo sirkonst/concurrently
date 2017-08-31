@@ -16,7 +16,6 @@ Runs code in system threads::
 .. autoclass:: concurrently.ThreadEngine
 """
 import threading
-from functools import lru_cache
 from queue import Queue
 from typing import Callable, List
 
@@ -52,8 +51,12 @@ class ThreadWaiter(AbstractWaiter):
         for _ in range(len(self._fs)):
             exc = self._result_q.get()
             if exc and fail_hard:
-                [kill_thread(f) for f in self._fs]
-                [f.join() for f in self._fs]
+                for f in self._fs:
+                    kill_thread(f)
+
+                for f in self._fs:
+                    f.join()
+
                 raise exc
             elif exc:
                 self._exceptions.append(exc)
@@ -66,7 +69,6 @@ class ThreadWaiter(AbstractWaiter):
             kill_thread(f)
         self(suppress_exceptions=True)
 
-    @lru_cache()
     def exceptions(self) -> List[Exception]:
         return self._exceptions
 

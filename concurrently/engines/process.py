@@ -18,7 +18,6 @@ Runs code in system process::
 from multiprocessing import Queue, Process as _Process
 import os
 import signal
-from functools import lru_cache
 from typing import Callable, List
 
 from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
@@ -52,8 +51,12 @@ class ProcessWaiter(AbstractWaiter):
         for _ in range(len(self._fs)):
             exc = self._result_q.get()
             if exc and fail_hard:
-                [os.kill(f.pid, signal.SIGINT) for f in self._fs]
-                [f.join() for f in self._fs]
+                for f in self._fs:
+                    os.kill(f.pid, signal.SIGINT)
+
+                for f in self._fs:
+                    f.join()
+
                 raise exc
             elif exc:
                 self._exceptions.append(exc)
@@ -66,7 +69,6 @@ class ProcessWaiter(AbstractWaiter):
             os.kill(f.pid, signal.SIGINT)
         self(suppress_exceptions=True)
 
-    @lru_cache()
     def exceptions(self) -> List[Exception]:
         return self._exceptions
 

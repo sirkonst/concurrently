@@ -42,11 +42,15 @@ from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 class AsyncIOWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[asyncio.Future], loop: asyncio.BaseEventLoop):
+    def __init__(
+        self, fs: List[asyncio.Future], loop: asyncio.BaseEventLoop
+    ) -> None:
         self._fs = fs
         self._loop = loop
 
-    async def __call__(self, *, suppress_exceptions=False, fail_hard=False):
+    async def __call__(
+        self, *, suppress_exceptions=False, fail_hard=False
+    ) -> None:
         when = asyncio.FIRST_EXCEPTION if fail_hard else asyncio.ALL_COMPLETED
         done, pending = await asyncio.wait(
             self._fs, loop=self._loop, return_when=when
@@ -55,16 +59,19 @@ class AsyncIOWaiter(AbstractWaiter):
         if fail_hard:
             f = next(filter(lambda x: x.exception(), done), None)
             if f:
-                [p.cancel() for p in pending]
+                for p in pending:
+                    p.cancel()
+
                 await asyncio.wait(pending, loop=self._loop)
                 raise f.exception()
 
         if not suppress_exceptions and self.exceptions():
             raise UnhandledExceptions(self.exceptions())
 
-    async def stop(self):
+    async def stop(self) -> None:
         for f in self._fs:
             f.cancel()
+
         await self(suppress_exceptions=True)
 
     @lru_cache()
@@ -85,7 +92,7 @@ class AsyncIOEngine(AbstractEngine):
     """
     :param loop: specific asyncio loop or use default if `None`
     """
-    def __init__(self, *, loop: asyncio.BaseEventLoop=None):
+    def __init__(self, *, loop: asyncio.BaseEventLoop=None) -> None:
         super().__init__()
         self.loop = loop or asyncio.get_event_loop()
 
@@ -95,7 +102,7 @@ class AsyncIOEngine(AbstractEngine):
 
         return self.loop.create_task(fn())
 
-    def waiter_factory(self, fs: List[asyncio.Future]):
+    def waiter_factory(self, fs: List[asyncio.Future]) -> AsyncIOWaiter:
         return AsyncIOWaiter(fs=fs, loop=self.loop)
 
 
