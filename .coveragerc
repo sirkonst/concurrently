@@ -1,5 +1,9 @@
 [run]
 source = concurrently
+branch = True
+omit =
+    test_*
+    */tests/*
 
 [report]
 exclude_lines =

@@ -1,11 +1,11 @@
-from multiprocessing import Queue
 import time
+from multiprocessing import Queue
+from queue import Empty
 
 import pytest
 
 from concurrently import concurrently, ProcessEngine, UnhandledExceptions
-
-from . import EngineTest, paramz_conc_count, paramz_data_count
+from . import EngineTest, paramz_conc_count
 
 
 def process(data):
@@ -16,37 +16,31 @@ def process(data):
 class TestProcessEngine(EngineTest):
 
     @paramz_conc_count
-    @paramz_data_count
-    def test_concurrently(self, conc_count, data_count):
-        data = range(data_count)
-        q_data = Queue()
-        for d in data:
-            q_data.put(d)
+    def test_concurrently(self, conc_count):
         q_results = Queue()
+
         start_time = time.time()
 
         @concurrently(conc_count, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
-                res = process(d)
-                q_results.put({d: res})
+            st = time.time()
+            time.sleep(1)
+            et = time.time()
+
+            q_results.put((st, et))
 
         _parallel()
+        end_time = time.time()
 
-        def calc_delta(n):
-            if n // conc_count == 0:
-                return n
-            return n + calc_delta(n - conc_count)
-
-        results = {}
+        results = []
         while not q_results.empty():
-            results.update(q_results.get())
+            results.append(q_results.get())
 
-        assert len(results) == data_count
-        for n, v in results.items():
-            delta = v - start_time
-            assert int(delta) == calc_delta(n)
+        assert len(results) == conc_count, results
+
+        for st, et in results:
+            assert 0 <= st - start_time < 0.1
+            assert 0 <= end_time - et < 0.1
 
     def test_stop(self):
         data = range(3)
@@ -58,10 +52,16 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
-                res = process(d)
-                q_results.put({d: res})
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
+                if d != 0:
+                    time.sleep(1)
+
+                q_results.put({d: time.time()})
 
         time.sleep(0.5)
         _parallel.stop()
@@ -85,6 +85,8 @@ class TestProcessEngine(EngineTest):
                 d = q_data.get()
                 if d == 1:
                     raise RuntimeError()
+                else:
+                    time.sleep(0.1)
 
         with pytest.raises(UnhandledExceptions) as exc:
             _parallel()
@@ -102,8 +104,12 @@ class TestProcessEngine(EngineTest):
 
         @concurrently(2, engine=ProcessEngine)
         def _parallel():
-            while not q_data.empty():
-                d = q_data.get()
+            while True:
+                try:
+                    d = q_data.get_nowait()
+                except Empty:
+                    break
+
                 if d == 1:
                     raise RuntimeError()
                 res = process(d)

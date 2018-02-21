@@ -1,6 +1,12 @@
+#!/usr/bin/env python
+
 from setuptools import setup
+from versioning import version
+
 
 setup(
-    setup_requires=['pbr>=1.9', 'setuptools>=17.1'],
-    pbr=True,
+    setup_requires=[
+        'setuptools >= 30.4'
+    ],
+    version=version(0, 11),
 )

@@ -1,19 +1,11 @@
-.. -*- mode: rst -*-
-
-.. image:: https://travis-ci.org/sirkonst/concurrently.svg?branch=master
-    :alt: Build Status
-    :target: https://travis-ci.org/sirkonst/concurrently
-
-.. image:: https://coveralls.io/repos/github/sirkonst/concurrently/badge.svg?branch=master
-    :alt: Code Coverage
-    :target: https://coveralls.io/github/sirkonst/concurrently?branch=master
-
 Concurrently
 ============
 
-Library helps easy write concurrent executed code blocks.
+Library helps to easily write concurrent executed code blocks.
 
-Quick example::
+Quick example:
+
+.. code-block:: python
 
     import asyncio
     from concurrently import concurrently
@@ -36,7 +28,8 @@ Quick example::
         @concurrently(2)
         async def fetch_urls():
             for url in urls:
-                page = await fetch_page(url)  # some function for download page
+                # some function for download page
+                page = await fetch_page(url)
                 results[url] = page
 
         # wait until all concurrent threads finished
@@ -49,81 +42,65 @@ Quick example::
         loop.run_until_complete(amain(loop))
 
 
-``Concurrently`` supports specific different concurrent engines.
+Documentation
+-------------
 
-Engines
+See https://concurrently.readthedocs.io/
+
+
+Install
 =======
 
-AsyncIOEngine
--------------
+From PyPi:
 
-Default engine for concurrently run code as asyncio coroutines::
+.. code-block:: bash
 
-    from concurrently import concurrently, AsyncIOEngine
-
-    ...
-    @concurrently(2, engine=AsyncIOEngine, loop=loop)  # loop is option
-    async def fetch_urls():
-        ...
-
-    await fetch_urls()
+    $ pip install concurrently
 
 
-AsyncIOThreadEngine
--------------------
+From local:
 
-Concurrently run code in threads with asyncio::
+.. code-block:: bash
 
-    from concurrently import concurrently, AsyncIOThreadEngine
-
-    ...
-    @concurrently(2, engine=AsyncIOThreadEngine, loop=loop)
-    def fetch_urls():  # not async def
-        ...
-
-    await fetch_urls()
+    # update setuptools
+    $ pip install 'setuptools >= 30.4'
+    # do install
+    $ make install
+    # or
+    $ pip install .
 
 
-ThreadEngine
-------------
+Development
+===========
 
-Concurrently run code in system threads::
+Prepare and activate virtual environment like:
 
-    from concurrently import concurrently, ThreadEngine
+.. code-block:: bash
 
-    ...
-    @concurrently(2, engine=ThreadEngine)
-    def fetch_urls():  # not async def
-        ...
+    $ python3 -m venv .env
+    # for bash
+    $ source .env/bin/activate
+    # for fish
+    $ . .env/bin/activate.fish
 
-    fetch_urls()  # not await
+Update pre-install dependencies:
 
+.. code-block:: bash
 
-ProcessEngine
--------------
+    $ pip install 'setuptools >= 30.4'
 
-Concurrently run code in system process::
+Install:
 
-    from concurrently import concurrently, ProcessEngine
+.. code-block:: bash
 
-    ...
-    @concurrently(2, engine=ProcessEngine)
-    def fetch_urls():
-        ...
+    $ make install_dev
+    # or
+    $ pip install --editable .[develop]
 
-    fetch_urls()
+Run tests:
 
+.. code-block:: bash
 
-GeventEngine
--------------
-
-Concurrently run code as gevent greenlet::
-
-    from concurrently import concurrently, GeventEngine
-
-    ...
-    @concurrently(2, engine=GeventEngine)
-    def fetch_urls():
-        ...
-
-    fetch_urls()
+    $ make test
+    # or
+    $ pytest tests/
