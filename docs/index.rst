@@ -3,7 +3,9 @@ Concurrently
 
 Library helps to easily write concurrent executed code blocks.
 
-Quick example::
+Quick example:
+
+.. code-block:: python
 
     import asyncio
     from concurrently import concurrently

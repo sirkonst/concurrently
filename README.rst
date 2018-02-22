@@ -42,6 +42,14 @@ Quick example:
         loop.run_until_complete(amain(loop))
 
 
+Decorator :func:`@concurrently` makes to main thinks:
+    * starts concurrent execution specified count of decorated function
+    * returns special :ref:`waiter` object to control the running functions
+
+By default, the code runs as asyncio coroutines, but there are other supported
+ways to execute, by specifying the argument `engine`.
+
+
 Documentation
 -------------
 
