@@ -30,3 +30,25 @@ install:
 .PHONY: install_dev
 install_dev:
 	pip install --editable .[develop]
+
+
+.PHONY: clean_dist
+clean_dist:
+	if [ -d dist/ ]; then rm -rv dist/; fi;
+
+
+.PHONY: build_dist
+build_dist: clean_dist
+	python setup.py sdist bdist_wheel
+
+
+.PHONY: _check_dist
+_check_dist:
+	test -d dist/ || ( \
+		echo -e "\n--> [!] run 'make build_dist' before!\n" && exit 1 \
+	)
+
+
+.PHONY: upload
+upload: _check_dist
+	twine upload --skip-existing dist/*

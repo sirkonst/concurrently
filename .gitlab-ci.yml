@@ -25,20 +25,20 @@ test_3.6:
     PYTHON_VERSION: "3.6"
 
 
-#upload_to_pypi:
-#  stage: release
-#  image: python
-#  before_script:
-#    - pip install setuptools wheel twine -U
-#  script:
-#    - make build_dist
-#    - make upload
-#  when: manual
-#  only:
-#    - master
-#    - /^release/.+$/
-#    - tags
-#  environment:
-#    name: PyPi
-#    url: https://pypi.python.org/pypi/concurrently
-#  dependencies: []  # don't fetch artifacts
+upload_to_pypi:
+  stage: release
+  image: python
+  before_script:
+    - pip install setuptools wheel twine -U
+  script:
+    - make build_dist
+    - make upload
+  when: manual
+  only:
+    - master
+    - /^release/.+$/
+    - tags
+  environment:
+    name: PyPi
+    url: https://pypi.python.org/pypi/concurrently
+  dependencies: []  # don't fetch artifacts
