@@ -1,6 +1,6 @@
 # interpreter version (ex.: 3.6) or use current
 PYTHON := $(PYTHON)
-OPEN = $(shell which xdg-open || which gnome-open || which open)
+OPEN = $(shell which kde-open || which xdg-open || which gnome-open || which open)
 
 all: test
 

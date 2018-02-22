@@ -51,6 +51,12 @@ By default, the code runs as asyncio coroutines, but there are other supported
 ways to execute, by specifying the argument `engine`.
 
 
+Requirements
+------------
+
+Now support only **Python 3.5** and above.
+
+
 Details
 =======
 

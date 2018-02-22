@@ -42,9 +42,9 @@ Quick example:
         loop.run_until_complete(amain(loop))
 
 
-Decorator :func:`@concurrently` makes to main thinks:
+Decorator `@concurrently` makes to main thinks:
     * starts concurrent execution specified count of decorated function
-    * returns special :ref:`waiter` object to control the running functions
+    * returns special `waiter` object to control the running functions
 
 By default, the code runs as asyncio coroutines, but there are other supported
 ways to execute, by specifying the argument `engine`.
@@ -56,20 +56,24 @@ Documentation
 See https://concurrently.readthedocs.io/
 
 
+Requirements
+============
+
+Now support only **Python 3.5** and above.
+
+
 Install
 =======
 
 From PyPi:
 
 .. code-block:: bash
-
     $ pip install concurrently
 
 
 From local:
 
 .. code-block:: bash
-
     # update setuptools
     $ pip install 'setuptools >= 30.4'
     # do install
