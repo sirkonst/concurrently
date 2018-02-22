@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+0.10.0
+------
+
+* beta release
+* Ensure that decorated function for  AsyncIOThreadEngine is not  coroutine
+* Ensure that decorated function for  AsyncIOEngine is  coroutine
+* added Sphinx documentation
+
 0.8.0
 -----
 

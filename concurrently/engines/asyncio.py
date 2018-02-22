@@ -1,3 +1,37 @@
+"""
+AsyncIOEngine
+-------------
+
+Runs code as asyncio coroutines::
+
+    from concurrently import concurrently, AsyncIOEngine
+
+    ...
+    @concurrently(2, engine=AsyncIOEngine, loop=loop)  # loop is option
+    async def fetch_urls():
+        ...
+
+    await fetch_urls()
+
+.. autoclass:: concurrently.AsyncIOEngine
+
+
+AsyncIOThreadEngine
+-------------------
+
+Runs code in threads with asyncio::
+
+    from concurrently import concurrently, AsyncIOThreadEngine
+
+    ...
+    @concurrently(2, engine=AsyncIOThreadEngine, loop=loop)
+    def fetch_urls():  # not async def
+        ...
+
+    await fetch_urls()
+
+.. autoclass:: concurrently.AsyncIOThreadEngine
+"""
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
@@ -48,12 +82,17 @@ class AsyncIOWaiter(AbstractWaiter):
 
 
 class AsyncIOEngine(AbstractEngine):
-
+    """
+    :param loop: specific asyncio loop or use default if `None`
+    """
     def __init__(self, *, loop: asyncio.BaseEventLoop=None):
         super().__init__()
         self.loop = loop or asyncio.get_event_loop()
 
     def create_task(self, fn: asyncio.coroutine) -> asyncio.Future:
+        assert asyncio.iscoroutinefunction(fn), \
+            'Decorated function `{}` must be coroutine'.format(fn.__name__)
+
         return self.loop.create_task(fn())
 
     def waiter_factory(self, fs: List[asyncio.Future]):
@@ -61,7 +100,15 @@ class AsyncIOEngine(AbstractEngine):
 
 
 class AsyncIOThreadEngine(AsyncIOEngine):
-    pool = ThreadPoolExecutor()
+    """
+    :param loop: specific asyncio loop or use default if `None`
+    """
+    _pool = ThreadPoolExecutor()
 
     def create_task(self, fn: Callable[[], None]) -> asyncio.Future:
-        return self.loop.run_in_executor(self.pool, fn)
+        assert not asyncio.iscoroutinefunction(fn), \
+            'Decorated function `{}` must be regular not a coroutine'.format(
+                fn.__name__
+            )
+
+        return self.loop.run_in_executor(self._pool, fn)

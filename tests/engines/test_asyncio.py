@@ -120,3 +120,13 @@ class TestAsyncIOEngine(EngineTest):
 
         assert len(results) == 1
         assert results[0]
+
+    @pytest.mark.asyncio(forbid_global_loop=True)
+    async def test_decorated_fn_is_coroutine(self, event_loop):
+        with pytest.raises(AssertionError) as e:
+            @concurrently(1, engine=AsyncIOEngine, loop=event_loop)
+            def _no_coroutine():
+                pass
+
+        assert str(e.value) \
+            == 'Decorated function `_no_coroutine` must be coroutine'

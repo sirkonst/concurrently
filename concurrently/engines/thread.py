@@ -1,3 +1,20 @@
+"""
+ThreadEngine
+------------
+
+Runs code in system threads::
+
+    from concurrently import concurrently, ThreadEngine
+
+    ...
+    @concurrently(2, engine=ThreadEngine)
+    def fetch_urls():  # not async def
+        ...
+
+    fetch_urls()  # not await
+
+.. autoclass:: concurrently.ThreadEngine
+"""
 import threading
 from functools import lru_cache
 from queue import Queue
