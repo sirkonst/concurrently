@@ -68,12 +68,14 @@ Install
 From PyPi:
 
 .. code-block:: bash
+
     $ pip install concurrently
 
 
 From local:
 
 .. code-block:: bash
+
     # update setuptools
     $ pip install 'setuptools >= 30.4'
     # do install
