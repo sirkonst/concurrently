@@ -14,16 +14,6 @@ stages:
     paths:
       - htmlcov/
 
-#test_3.3:
-#  <<: *test_template
-#  variables:
-#    PYTHON_VERSION: "3.3"
-#
-#test_3.4:
-#  <<: *test_template
-#  variables:
-#    PYTHON_VERSION: "3.4"
-
 test_3.5:
   <<: *test_template
   variables:
