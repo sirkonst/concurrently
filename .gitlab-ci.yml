@@ -24,6 +24,11 @@ test_3.6:
   variables:
     PYTHON_VERSION: "3.6"
 
+test_3.7:
+  <<: *test_template
+  variables:
+    PYTHON_VERSION: "3.7"
+
 
 upload_to_pypi:
   stage: release
@@ -40,5 +45,5 @@ upload_to_pypi:
     - tags
   environment:
     name: PyPi
-    url: https://pypi.python.org/pypi/concurrently
+    url: https://pypi.org/project/concurrently/
   dependencies: []  # don't fetch artifacts
