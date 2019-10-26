@@ -8,8 +8,8 @@ from concurrently import concurrently, AsyncIOEngine, UnhandledExceptions
 from . import EngineTest, paramz_conc_count, paramz_data_count
 
 
-async def process(data, *, loop):
-    await asyncio.sleep(data, loop=loop)
+async def process(data):
+    await asyncio.sleep(data)
     return time.time()
 
 
@@ -18,16 +18,16 @@ class TestAsyncIOEngine(EngineTest):
     @pytest.mark.asyncio(forbid_global_loop=True)
     @paramz_conc_count
     @paramz_data_count
-    async def test_concurrently(self, conc_count, data_count, event_loop):
+    async def test_concurrently(self, conc_count, data_count):
         data = range(data_count)
         i_data = iter(data)
         results = {}
         start_time = time.time()
 
-        @concurrently(conc_count, engine=AsyncIOEngine, loop=event_loop)
+        @concurrently(conc_count, engine=AsyncIOEngine)
         async def _parallel():
             for d in i_data:
-                res = await process(d, loop=event_loop)
+                res = await process(d)
                 results[d] = res
 
         await _parallel()
@@ -43,30 +43,30 @@ class TestAsyncIOEngine(EngineTest):
             assert int(delta) == calc_delta(n)
 
     @pytest.mark.asyncio(forbid_global_loop=True)
-    async def test_stop(self, event_loop):
+    async def test_stop(self):
         data = range(3)
         i_data = iter(data)
         results = {}
         start_time = time.time()
 
-        @concurrently(2, engine=AsyncIOEngine, loop=event_loop)
+        @concurrently(2, engine=AsyncIOEngine)
         async def _parallel():
             for d in i_data:
-                r = await process(d, loop=event_loop)
+                r = await process(d)
                 results[d] = r
 
-        await asyncio.sleep(0.5, loop=event_loop)
+        await asyncio.sleep(0.5)
         await _parallel.stop()
 
         assert len(results) == 1
         assert int(results[0]) == int(start_time)
 
     @pytest.mark.asyncio(forbid_global_loop=True)
-    async def test_exception(self, event_loop):
+    async def test_exception(self):
         data = range(2)
         i_data = iter(data)
 
-        @concurrently(2, engine=AsyncIOEngine, loop=event_loop)
+        @concurrently(2, engine=AsyncIOEngine)
         async def _parallel():
             for d in i_data:
                 if d == 1:
@@ -79,18 +79,18 @@ class TestAsyncIOEngine(EngineTest):
         assert isinstance(exc.value.exceptions[0], RuntimeError)
 
     @pytest.mark.asyncio(forbid_global_loop=True)
-    async def test_exception_suppress(self, event_loop):
+    async def test_exception_suppress(self):
         data = range(2)
         i_data = iter(data)
         results = {}
         start_time = time.time()
 
-        @concurrently(2, engine=AsyncIOEngine, loop=event_loop)
+        @concurrently(2, engine=AsyncIOEngine)
         async def _parallel():
             for d in i_data:
                 if d == 1:
                     raise RuntimeError()
-                res = await process(d, loop=event_loop)
+                res = await process(d)
                 results[d] = res
 
         await _parallel(suppress_exceptions=True)
@@ -103,16 +103,16 @@ class TestAsyncIOEngine(EngineTest):
         assert isinstance(exc_list[0], RuntimeError)
 
     @pytest.mark.asyncio(forbid_global_loop=True)
-    async def test_fail_hard(self, event_loop):
+    async def test_fail_hard(self):
         i_data = iter(range(4))
         results = {}
 
-        @concurrently(3, engine=AsyncIOEngine, loop=event_loop)
+        @concurrently(3, engine=AsyncIOEngine)
         async def _parallel():
             for d in i_data:
                 if d == 1:
                     raise RuntimeError()
-                await asyncio.sleep(d, loop=event_loop)
+                await asyncio.sleep(d)
                 results[d] = True
 
         with pytest.raises(RuntimeError):
@@ -122,9 +122,9 @@ class TestAsyncIOEngine(EngineTest):
         assert results[0]
 
     @pytest.mark.asyncio(forbid_global_loop=True)
-    async def test_decorated_fn_is_coroutine(self, event_loop):
+    async def test_decorated_fn_is_coroutine(self):
         with pytest.raises(AssertionError) as e:
-            @concurrently(1, engine=AsyncIOEngine, loop=event_loop)
+            @concurrently(1, engine=AsyncIOEngine)
             def _no_coroutine():
                 pass
 

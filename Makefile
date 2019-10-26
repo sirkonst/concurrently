@@ -29,7 +29,7 @@ install:
 
 .PHONY: install_dev
 install_dev:
-	pip install --editable .[develop]
+	pip install --editable .[develop,gevent]
 
 
 .PHONY: clean_dist

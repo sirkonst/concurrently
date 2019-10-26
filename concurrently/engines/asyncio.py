@@ -7,7 +7,7 @@ Runs code as asyncio coroutines::
     from concurrently import concurrently, AsyncIOEngine
 
     ...
-    @concurrently(2, engine=AsyncIOEngine, loop=loop)  # loop is option
+    @concurrently(2, engine=AsyncIOEngine)
     async def fetch_urls():
         ...
 
@@ -24,7 +24,7 @@ Runs code in threads with asyncio::
     from concurrently import concurrently, AsyncIOThreadEngine
 
     ...
-    @concurrently(2, engine=AsyncIOThreadEngine, loop=loop)
+    @concurrently(2, engine=AsyncIOThreadEngine)
     def fetch_urls():  # not async def
         ...
 
@@ -33,30 +33,30 @@ Runs code in threads with asyncio::
 .. autoclass:: concurrently.AsyncIOThreadEngine
 """
 import asyncio
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from typing import Callable, List
 
 from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
+_PY_VERSION = float(sys.version_info[0]) + sys.version_info[1] / 10
+
 
 class AsyncIOWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[asyncio.Future], loop: asyncio.BaseEventLoop):
+    def __init__(self, fs: List[asyncio.Future]):
         self._fs = fs
-        self._loop = loop
 
     async def __call__(self, *, suppress_exceptions=False, fail_hard=False):
         when = asyncio.FIRST_EXCEPTION if fail_hard else asyncio.ALL_COMPLETED
-        done, pending = await asyncio.wait(
-            self._fs, loop=self._loop, return_when=when
-        )
+        done, pending = await asyncio.wait(self._fs, return_when=when)
 
         if fail_hard:
             f = next(filter(lambda x: x.exception(), done), None)
             if f:
                 [p.cancel() for p in pending]
-                await asyncio.wait(pending, loop=self._loop)
+                await asyncio.wait(pending)
                 raise f.exception()
 
         if not suppress_exceptions and self.exceptions():
@@ -82,27 +82,22 @@ class AsyncIOWaiter(AbstractWaiter):
 
 
 class AsyncIOEngine(AbstractEngine):
-    """
-    :param loop: specific asyncio loop or use default if `None`
-    """
-    def __init__(self, *, loop: asyncio.BaseEventLoop=None):
+
+    def __init__(self):
         super().__init__()
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = _get_running_loop()
 
     def create_task(self, fn: asyncio.coroutine) -> asyncio.Future:
         assert asyncio.iscoroutinefunction(fn), \
             'Decorated function `{}` must be coroutine'.format(fn.__name__)
 
-        return self.loop.create_task(fn())
+        return _create_task(fn())
 
     def waiter_factory(self, fs: List[asyncio.Future]):
-        return AsyncIOWaiter(fs=fs, loop=self.loop)
+        return AsyncIOWaiter(fs=fs)
 
 
 class AsyncIOThreadEngine(AsyncIOEngine):
-    """
-    :param loop: specific asyncio loop or use default if `None`
-    """
     _pool = ThreadPoolExecutor()
 
     def create_task(self, fn: Callable[[], None]) -> asyncio.Future:
@@ -112,3 +107,17 @@ class AsyncIOThreadEngine(AsyncIOEngine):
             )
 
         return self.loop.run_in_executor(self._pool, fn)
+
+
+def _create_task(coro: asyncio.coroutine) -> asyncio.Task:
+    if _PY_VERSION >= 3.7:
+        return asyncio.create_task(coro)
+
+    return _get_running_loop().create_task(coro)
+
+
+def _get_running_loop() -> asyncio.AbstractEventLoop:
+    if _PY_VERSION >= 3.7:
+        return asyncio.get_running_loop()
+
+    return asyncio.get_event_loop()
