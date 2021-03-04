@@ -26,11 +26,11 @@ from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 class Process(_Process):
 
-    def __init__(self, *a, result_q: Queue, **kw):
+    def __init__(self, *a, result_q: Queue, **kw) -> None:
         super().__init__(*a, **kw)
         self._result_q = result_q
 
-    def run(self):
+    def run(self) -> None:
         try:
             super().run()
         except Exception as e:
@@ -43,25 +43,29 @@ class Process(_Process):
 
 class ProcessWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[Process], result_q: Queue):
+    def __init__(self, fs: List[Process], result_q: Queue) -> None:
         self._fs = fs
         self._result_q = result_q
         self._exceptions = []
 
-    def __call__(self, *, suppress_exceptions=False, fail_hard=False):
+    def __call__(
+        self, *, suppress_exceptions: bool = False, fail_hard: bool = False
+    ) -> None:
         for _ in range(len(self._fs)):
             exc = self._result_q.get()
             if exc and fail_hard:
-                [os.kill(f.pid, signal.SIGINT) for f in self._fs]
-                [f.join() for f in self._fs]
+                for f in self._fs:
+                    os.kill(f.pid, signal.SIGINT)
+                for f in self._fs:
+                    f.join()
                 raise exc
-            elif exc:
+            if exc:
                 self._exceptions.append(exc)
 
         if not suppress_exceptions and self.exceptions():
             raise UnhandledExceptions(self.exceptions())
 
-    def stop(self):
+    def stop(self) -> None:
         for f in self._fs:
             os.kill(f.pid, signal.SIGINT)
         self(suppress_exceptions=True)
@@ -73,7 +77,7 @@ class ProcessWaiter(AbstractWaiter):
 
 class ProcessEngine(AbstractEngine):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._result_q = Queue()
 
     def create_task(self, fn: Callable[[], None]) -> Process:
@@ -81,5 +85,5 @@ class ProcessEngine(AbstractEngine):
         p.start()
         return p
 
-    def waiter_factory(self, fs):
+    def waiter_factory(self, fs) -> ProcessWaiter:
         return ProcessWaiter(fs, self._result_q)

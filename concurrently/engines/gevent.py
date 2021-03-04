@@ -37,17 +37,18 @@ class GeventEngine(AbstractEngine):
     def create_task(self, fn: Callable) -> gevent.Greenlet:
         return gevent.spawn(fn)
 
-    def waiter_factory(self, fs):
+    def waiter_factory(self, fs) -> 'GeventWaiter':
         return GeventWaiter(fs)
 
 
 class GeventWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[gevent.Greenlet]):
+    def __init__(self, fs: List[gevent.Greenlet]) -> None:
         self._fs = fs
 
-    def __call__(self, *, suppress_exceptions: bool=False,
-                 fail_hard: bool=False):
+    def __call__(
+        self, *, suppress_exceptions: bool = False, fail_hard: bool = False
+    ) -> None:
         if not fail_hard:
             gevent.joinall(self._fs)
             if not suppress_exceptions:
@@ -57,7 +58,7 @@ class GeventWaiter(AbstractWaiter):
         else:
             gevent.joinall(self._fs, raise_error=True)
 
-    def stop(self):
+    def stop(self) -> None:
         gevent.killall(self._fs)
 
     @lru_cache()

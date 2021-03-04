@@ -2,27 +2,24 @@ import sys
 from types import ModuleType
 
 from ._concurrently import concurrently, get_default_engine, set_default_engine
-
-__all__ = ['concurrently', 'get_default_engine', 'set_default_engine']
-
-
-# -- engines:
 from .engines import UnhandledExceptions
 from .engines.thread import ThreadEngine
 from .engines.process import ProcessEngine
 from .engines.asyncio import AsyncIOEngine, AsyncIOThreadEngine
 
-__all__.extend((
-    'ThreadEngine', 'ProcessEngine', 'AsyncIOEngine', 'AsyncIOThreadEngine'
-))
+__all__ = [
+    'concurrently', 'get_default_engine', 'set_default_engine',
+    'UnhandledExceptions', 'ThreadEngine', 'ProcessEngine', 'AsyncIOEngine',
+    'AsyncIOThreadEngine',
+]
 
 set_default_engine(AsyncIOEngine)
 
 try:
-    from .engines.gevent import GeventEngine
+    from .engines.gevent import GeventEngine  # noqa:W0611
     __all__.append('GeventEngine')
-except ImportError as e:
-    GeventEngine = e
+except ImportError:
+    pass
 
 
 class Module(ModuleType):

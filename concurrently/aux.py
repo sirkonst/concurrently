@@ -2,13 +2,16 @@ import ctypes
 import sys
 import threading
 import time
+from typing import Type
 
 _PY_VERSION = float(sys.version_info[0]) + sys.version_info[1] / 10
 
 
-# inspired by https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
+# inspired by
+# https://github.com/mosquito/crew/blob/master/crew/worker/thread.py
 def kill_thread(
-    thread: threading.Thread, exception: BaseException=KeyboardInterrupt
+    thread: threading.Thread,
+    exception: Type[BaseException] = KeyboardInterrupt
 ) -> None:
     is_alive = thread.is_alive if _PY_VERSION >= 3.7 else thread.isAlive
 
@@ -21,7 +24,7 @@ def kill_thread(
 
     if res == 0:
         raise ValueError('nonexistent thread id')
-    elif res > 1:
+    if res > 1:
         ctypes.pythonapi.PyThreadState_SetAsyncExc(thread.ident, None)
         raise SystemError('PyThreadState_SetAsyncExc failed')
 

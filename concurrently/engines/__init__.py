@@ -25,8 +25,9 @@ class AbstractEngine(metaclass=abc.ABCMeta):
 class AbstractWaiter(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def __call__(self, *,
-                 suppress_exceptions: bool=False, fail_hard: bool=False):
+    def __call__(
+        self, *, suppress_exceptions: bool = False, fail_hard: bool = False
+    ) -> None:
         """
         The call blocks until the completion of all concurrent functions.
 
@@ -42,7 +43,7 @@ class AbstractWaiter(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def stop(self):
+    def stop(self) -> None:
         """
         Interrupts execution functions.
         """

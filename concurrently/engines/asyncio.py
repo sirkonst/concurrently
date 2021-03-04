@@ -45,24 +45,27 @@ _PY_VERSION = float(sys.version_info[0]) + sys.version_info[1] / 10
 
 class AsyncIOWaiter(AbstractWaiter):
 
-    def __init__(self, fs: List[asyncio.Future]):
+    def __init__(self, fs: List[asyncio.Future]) -> None:
         self._fs = fs
 
-    async def __call__(self, *, suppress_exceptions=False, fail_hard=False):
+    async def __call__(
+        self, *, suppress_exceptions: bool = False, fail_hard: bool = False
+    ) -> None:
         when = asyncio.FIRST_EXCEPTION if fail_hard else asyncio.ALL_COMPLETED
         done, pending = await asyncio.wait(self._fs, return_when=when)
 
         if fail_hard:
             f = next(filter(lambda x: x.exception(), done), None)
             if f:
-                [p.cancel() for p in pending]
+                for p in pending:
+                    p.cancel()
                 await asyncio.wait(pending)
                 raise f.exception()
 
         if not suppress_exceptions and self.exceptions():
             raise UnhandledExceptions(self.exceptions())
 
-    async def stop(self):
+    async def stop(self) -> None:
         for f in self._fs:
             f.cancel()
         await self(suppress_exceptions=True)
@@ -83,7 +86,7 @@ class AsyncIOWaiter(AbstractWaiter):
 
 class AsyncIOEngine(AbstractEngine):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.loop = _get_running_loop()
 
@@ -93,7 +96,7 @@ class AsyncIOEngine(AbstractEngine):
 
         return _create_task(fn())
 
-    def waiter_factory(self, fs: List[asyncio.Future]):
+    def waiter_factory(self, fs: List[asyncio.Future]) -> AsyncIOWaiter:
         return AsyncIOWaiter(fs=fs)
 
 

@@ -36,7 +36,7 @@ def _get_git_version():
     return major, minor, patch, dev, localversion
 
 
-def version(major=0, minor=None, patch=None, localversion='auto'):
+def version(major=0, minor=None, patch=None, localversion='auto'):  # noqa:C901
     repo_version = _get_git_version()
     is_dev = False
 
