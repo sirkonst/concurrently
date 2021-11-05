@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import logging
 import urllib.parse
+from contextlib import ExitStack
 
 import aiohttp
 from lxml import etree
@@ -21,49 +22,58 @@ parser.add_argument(
 )
 
 
-async def amain(base_url, concurrency, *, loop):
+async def _parse_page_related_urls(url, base_url, session):
+    log = logger.getChild(url)
+
+    log.debug('Start parsing')
+    async with session.get(url) as resp:
+        log.info(
+            'Response status: %s, type: "%s", size: %s',
+            resp.status,
+            resp.headers.get('Content-Type', '(unknown)'),
+            resp.headers.get('Content-Length', '(unknown)')
+        )
+
+        if resp.status != 200:
+            return
+
+        body = await resp.read()
+        log.debug('Body size: %s', len(body))
+
+    html = etree.HTML(body)
+    for tag_a in html.xpath('//a/@href'):
+        next_url = urllib.parse.urljoin(url, tag_a)
+        if (
+            next_url.startswith(base_url)
+            and '?' not in next_url
+            and '#' not in next_url
+        ):
+            yield next_url
+
+
+async def amain(base_url, concurrency):
     pages = {base_url}
 
     pending_pages = asyncio.Queue()
     for page in pages:
         await pending_pages.put(page)
 
-    @concurrently(concurrency, loop=loop)
+    @concurrently(concurrency)
     async def _page_parser():
-        with aiohttp.ClientSession(loop=loop) as session:
+        async with aiohttp.ClientSession() as session:
             while True:
-                url = await pending_pages.get()
-                log = logger.getChild(url)
+                with ExitStack() as stack:
+                    url = await pending_pages.get()
+                    stack.callback(pending_pages.task_done)
 
-                log.debug('Start parsing')
-                async with session.get(url) as resp:
-                    log.info(
-                        'Response status: %s, type: "%s", size: %s',
-                        resp.status,
-                        resp.headers.get('Content-Type', '(unknown)'),
-                        resp.headers.get('Content-Length', '(unknown)')
-                    )
-
-                    if resp.status != 200:
-                        pending_pages.task_done()
-                        continue
-
-                    body = await resp.read()
-                    log.debug('Body size: %s', len(body))
-
-                html = etree.HTML(body)
-                for tag_a in html.xpath('//a/@href'):
-                    next_url = urllib.parse.urljoin(url, tag_a)
-                    if (
-                        next_url.startswith(base_url)
-                        and '?' not in next_url
-                        and '#' not in next_url
-                        and next_url not in pages
+                    async for next_url in _parse_page_related_urls(
+                        url, base_url, session
                     ):
+                        if next_url in pages:
+                            continue
+
                         pages.add(next_url)
                         await pending_pages.put(next_url)
-
-                pending_pages.task_done()
 
     await pending_pages.join()
     await _page_parser.stop()
@@ -72,7 +82,7 @@ async def amain(base_url, concurrency, *, loop):
 def main(arguments):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
-        amain(arguments.base_url, arguments.concurrency, loop=loop)
+        amain(arguments.base_url, arguments.concurrency)
     )
 
 
