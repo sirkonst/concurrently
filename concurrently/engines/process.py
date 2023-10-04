@@ -15,17 +15,17 @@ Runs code in system process::
 
 .. autoclass::  concurrently.ProcessEngine
 """
-from multiprocessing import Queue, Process as _Process
 import os
 import signal
 from functools import lru_cache
-from typing import Callable, List
+from multiprocessing import Process as _Process
+from multiprocessing import Queue
+from typing import Callable, List, Sequence
 
 from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 
 class Process(_Process):
-
     def __init__(self, *a, result_q: Queue, **kw) -> None:
         super().__init__(*a, **kw)
         self._result_q = result_q
@@ -42,11 +42,10 @@ class Process(_Process):
 
 
 class ProcessWaiter(AbstractWaiter):
-
     def __init__(self, fs: List[Process], result_q: Queue) -> None:
         self._fs = fs
         self._result_q = result_q
-        self._exceptions = []
+        self._exceptions: List[Exception] = []
 
     def __call__(
         self, *, suppress_exceptions: bool = False, fail_hard: bool = False
@@ -55,7 +54,8 @@ class ProcessWaiter(AbstractWaiter):
             exc = self._result_q.get()
             if exc and fail_hard:
                 for f in self._fs:
-                    os.kill(f.pid, signal.SIGINT)
+                    if f.pid:
+                        os.kill(f.pid, signal.SIGINT)
                 for f in self._fs:
                     f.join()
                 raise exc
@@ -67,18 +67,18 @@ class ProcessWaiter(AbstractWaiter):
 
     def stop(self) -> None:
         for f in self._fs:
-            os.kill(f.pid, signal.SIGINT)
+            if f.pid:
+                os.kill(f.pid, signal.SIGINT)
         self(suppress_exceptions=True)
 
     @lru_cache()
-    def exceptions(self) -> List[Exception]:
-        return self._exceptions
+    def exceptions(self) -> Sequence[Exception]:
+        return tuple(self._exceptions)
 
 
 class ProcessEngine(AbstractEngine):
-
     def __init__(self) -> None:
-        self._result_q = Queue()
+        self._result_q: Queue = Queue()
 
     def create_task(self, fn: Callable[[], None]) -> Process:
         p = Process(target=fn, result_q=self._result_q)

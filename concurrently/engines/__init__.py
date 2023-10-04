@@ -8,11 +8,10 @@ Supported engines
 .. automodule:: concurrently.engines.gevent
 """
 import abc
-from typing import List
+from typing import Sequence
 
 
 class AbstractEngine(metaclass=abc.ABCMeta):
-
     @abc.abstractmethod
     def create_task(self, fn):
         raise NotImplementedError
@@ -23,7 +22,6 @@ class AbstractEngine(metaclass=abc.ABCMeta):
 
 
 class AbstractWaiter(metaclass=abc.ABCMeta):
-
     @abc.abstractmethod
     def __call__(
         self, *, suppress_exceptions: bool = False, fail_hard: bool = False
@@ -50,7 +48,7 @@ class AbstractWaiter(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def exceptions(self) -> List[Exception]:
+    def exceptions(self) -> Sequence[Exception]:
         """
         Returns list of all exception.
 
@@ -63,5 +61,6 @@ class UnhandledExceptions(Exception):
     """
     :param exceptions: list of exception
     """
+
     def __init__(self, exceptions):
         self.exceptions = exceptions

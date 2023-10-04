@@ -22,10 +22,10 @@ Runs code as ``gevent`` greenlets::
 .. autoclass:: concurrently.GeventEngine
 """
 from functools import lru_cache
-from typing import Callable, List
+from typing import Callable, List, Sequence
 
 try:
-    import gevent
+    import gevent  # type: ignore
 except ImportError:
     raise ImportError('gevent is not installed')
 
@@ -33,7 +33,6 @@ from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 
 class GeventEngine(AbstractEngine):
-
     def create_task(self, fn: Callable) -> gevent.Greenlet:
         return gevent.spawn(fn)
 
@@ -42,7 +41,6 @@ class GeventEngine(AbstractEngine):
 
 
 class GeventWaiter(AbstractWaiter):
-
     def __init__(self, fs: List[gevent.Greenlet]) -> None:
         self._fs = fs
 
@@ -62,5 +60,5 @@ class GeventWaiter(AbstractWaiter):
         gevent.killall(self._fs)
 
     @lru_cache()
-    def exceptions(self) -> List[Exception]:
-        return [f.exception for f in self._fs if f.exception]
+    def exceptions(self) -> Sequence[Exception]:
+        return tuple(f.exception for f in self._fs if f.exception)

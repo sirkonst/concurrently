@@ -1,5 +1,14 @@
-CHANGES
-=======
+Changelog
+=========
+
+2.0
+----
+
+* Add support python 3.11 and 3.12
+* Drop support python 3.5 and 3.6
+* Use tuples for AbstractWaiter.exceptions() instead of list
+* Fix example
+* Migrate pylava -> pylama
 
 1.2
 ----

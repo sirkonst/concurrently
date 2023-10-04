@@ -2,7 +2,7 @@ stages:
   - test
   - release
 
-.test_template: &test_template
+test:
   stage: test
   image: python:$PYTHON_VERSION
   before_script:
@@ -13,36 +13,15 @@ stages:
   artifacts:
     paths:
       - htmlcov/
-
-test_3.5:
-  <<: *test_template
-  variables:
-    PYTHON_VERSION: "3.5"
-
-test_3.6:
-  <<: *test_template
-  variables:
-    PYTHON_VERSION: "3.6"
-
-test_3.7:
-  <<: *test_template
-  variables:
-    PYTHON_VERSION: "3.7"
-
-test_3.8:
-  <<: *test_template
-  variables:
-    PYTHON_VERSION: "3.8"
-
-test_3.9:
-  <<: *test_template
-  variables:
-    PYTHON_VERSION: "3.9"
-
-test_3.10:
-  <<: *test_template
-  variables:
-    PYTHON_VERSION: "3.10"
+  parallel:
+    matrix:
+      - PYTHON_VERSION:
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
 
 upload_to_pypi:
   stage: release

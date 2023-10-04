@@ -1,5 +1,4 @@
-import pytest
-
+import pytest  # type: ignore
 
 paramz_conc_count = pytest.mark.parametrize(
     'conc_count', range(1, 5), ids=lambda v: 'counc %s' % v
@@ -10,7 +9,6 @@ paramz_data_count = pytest.mark.parametrize(
 
 
 class EngineTest:
-
     @paramz_conc_count
     @paramz_data_count
     def test_concurrently(self, conc_count: int, data_count: int, *_):

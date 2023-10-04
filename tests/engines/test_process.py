@@ -2,9 +2,10 @@ import time
 from multiprocessing import Queue
 from queue import Empty
 
-import pytest
+import pytest  # type: ignore
 
-from concurrently import concurrently, ProcessEngine, UnhandledExceptions
+from concurrently import ProcessEngine, UnhandledExceptions, concurrently
+
 from . import EngineTest, paramz_conc_count
 
 
@@ -14,7 +15,6 @@ def process(data):
 
 
 class TestProcessEngine(EngineTest):
-
     @paramz_conc_count
     def test_concurrently(self, conc_count):
         q_results = Queue()
@@ -143,6 +143,8 @@ class TestProcessEngine(EngineTest):
                     raise RuntimeError()
                 time.sleep(d)
                 q_results.put({d: True})
+
+        time.sleep(0.1)
 
         with pytest.raises(RuntimeError):
             _parallel(fail_hard=True)

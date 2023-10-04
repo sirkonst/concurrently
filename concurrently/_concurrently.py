@@ -3,7 +3,6 @@ from typing import Callable, Optional, Type
 
 from concurrently.engines import AbstractEngine, AbstractWaiter
 
-
 __default_engine = local()
 __default_engine.cls = None
 
@@ -17,9 +16,9 @@ def get_default_engine() -> Type[AbstractEngine]:
 
 
 class Concurrently:
-
     def __init__(
-        self, concurrency: int = 1,
+        self,
+        concurrency: int = 1,
         *,
         engine: Optional[Type[AbstractEngine]] = None,
         **engine_kw

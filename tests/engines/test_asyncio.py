@@ -1,9 +1,9 @@
 import asyncio
 import time
 
-import pytest
+import pytest  # type: ignore
 
-from concurrently import concurrently, AsyncIOEngine, UnhandledExceptions
+from concurrently import AsyncIOEngine, UnhandledExceptions, concurrently
 
 from . import EngineTest, paramz_conc_count, paramz_data_count
 
@@ -14,7 +14,6 @@ async def process(data):
 
 
 class TestAsyncIOEngine(EngineTest):
-
     @pytest.mark.asyncio(forbid_global_loop=True)
     @paramz_conc_count
     @paramz_data_count
@@ -115,6 +114,8 @@ class TestAsyncIOEngine(EngineTest):
                 await asyncio.sleep(d)
                 results[d] = True
 
+        await asyncio.sleep(0.1)
+
         with pytest.raises(RuntimeError):
             await _parallel(fail_hard=True)
 
@@ -124,9 +125,12 @@ class TestAsyncIOEngine(EngineTest):
     @pytest.mark.asyncio(forbid_global_loop=True)
     async def test_decorated_fn_is_coroutine(self):
         with pytest.raises(AssertionError) as e:
+
             @concurrently(1, engine=AsyncIOEngine)
             def _no_coroutine():
                 pass
 
-        assert str(e.value) \
+        assert (
+            str(e.value)
             == 'Decorated function `_no_coroutine` must be coroutine'
+        )

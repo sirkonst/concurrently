@@ -1,8 +1,8 @@
 import time
 
-import pytest
+import pytest  # type: ignore
 
-from concurrently import concurrently, ThreadEngine, UnhandledExceptions
+from concurrently import ThreadEngine, UnhandledExceptions, concurrently
 
 from . import EngineTest, paramz_conc_count, paramz_data_count
 
@@ -13,7 +13,6 @@ def process(data):
 
 
 class TestThreadEngine(EngineTest):
-
     @paramz_conc_count
     @paramz_data_count
     def test_concurrently(self, conc_count, data_count):
@@ -108,6 +107,8 @@ class TestThreadEngine(EngineTest):
                     raise RuntimeError()
                 time.sleep(d)
                 results[d] = True
+
+        time.sleep(0.1)
 
         with pytest.raises(RuntimeError):
             _parallel(fail_hard=True)

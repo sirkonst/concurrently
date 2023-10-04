@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 /.coverage
 /.env/
+/.local/
 /.pytest_cache/
 /.tox/
 /dist/

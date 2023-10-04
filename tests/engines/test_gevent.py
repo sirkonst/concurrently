@@ -1,10 +1,9 @@
 import time
 
-import gevent
+import gevent  # type: ignore
+import pytest  # type: ignore
 
-import pytest
-
-from concurrently import concurrently, GeventEngine, UnhandledExceptions
+from concurrently import GeventEngine, UnhandledExceptions, concurrently
 
 from . import EngineTest, paramz_conc_count, paramz_data_count
 
@@ -15,7 +14,6 @@ def process(data):
 
 
 class TestGeventEngine(EngineTest):
-
     @paramz_conc_count
     @paramz_data_count
     def test_concurrently(self, conc_count, data_count):
@@ -110,6 +108,8 @@ class TestGeventEngine(EngineTest):
                     raise RuntimeError()
                 gevent.sleep(d)
                 results[d] = True
+
+        gevent.sleep(0.1)
 
         with pytest.raises(RuntimeError):
             _parallel(fail_hard=True)

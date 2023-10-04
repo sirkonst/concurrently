@@ -13,12 +13,19 @@ logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '-u', '--base-url', metavar='URL', required=True,
-    help='Entry point for scan site'
+    '-u',
+    '--base-url',
+    metavar='URL',
+    required=True,
+    help='Entry point for scan site',
 )
 parser.add_argument(
-    '-n', '--concurrency', metavar='COUNT', type=int, default=10,
-    help='Number of multiple requests to make at a time (default: 10)'
+    '-n',
+    '--concurrency',
+    metavar='COUNT',
+    type=int,
+    default=10,
+    help='Number of multiple requests to make at a time (default: 10)',
 )
 
 
@@ -31,7 +38,7 @@ async def _parse_page_related_urls(url, base_url, session):
             'Response status: %s, type: "%s", size: %s',
             resp.status,
             resp.headers.get('Content-Type', '(unknown)'),
-            resp.headers.get('Content-Length', '(unknown)')
+            resp.headers.get('Content-Length', '(unknown)'),
         )
 
         if resp.status != 200:
@@ -81,16 +88,11 @@ async def amain(base_url, concurrency):
 
 def main(arguments):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(
-        amain(arguments.base_url, arguments.concurrency)
-    )
+    loop.run_until_complete(amain(arguments.base_url, arguments.concurrency))
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        format='%(name)s: %(message)s',
-        level=logging.INFO
-    )
+    logging.basicConfig(format='%(name)s: %(message)s', level=logging.INFO)
 
     arguments = parser.parse_args()
 

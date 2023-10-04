@@ -18,14 +18,13 @@ Runs code in system threads::
 import threading
 from functools import lru_cache
 from queue import Queue
-from typing import Callable, List
+from typing import Callable, List, Sequence
 
 from concurrently.aux import kill_thread
 from . import AbstractEngine, AbstractWaiter, UnhandledExceptions
 
 
 class Thread(threading.Thread):
-
     def __init__(self, *a, result_q: Queue, **kw) -> None:
         super().__init__(*a, **kw)
         self._result_q = result_q
@@ -42,11 +41,10 @@ class Thread(threading.Thread):
 
 
 class ThreadWaiter(AbstractWaiter):
-
     def __init__(self, fs: List[Thread], result_q: Queue) -> None:
         self._fs = fs
         self._result_q = result_q
-        self._exceptions = []
+        self._exceptions: List[Exception] = []
 
     def __call__(
         self, *, suppress_exceptions: bool = False, fail_hard: bool = False
@@ -71,14 +69,13 @@ class ThreadWaiter(AbstractWaiter):
         self(suppress_exceptions=True)
 
     @lru_cache()
-    def exceptions(self) -> List[Exception]:
-        return self._exceptions
+    def exceptions(self) -> Sequence[Exception]:
+        return tuple(self._exceptions)
 
 
 class ThreadEngine(AbstractEngine):
-
     def __init__(self) -> None:
-        self._result_q = Queue()
+        self._result_q: Queue = Queue()
 
     def create_task(self, fn: Callable[[], None]) -> Thread:
         tr = Thread(target=fn, result_q=self._result_q)
