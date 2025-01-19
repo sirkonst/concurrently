@@ -9,5 +9,5 @@ localversion = os.environ.get('LOCALVERSION', 'auto') or None
 
 setup(
     setup_requires=['setuptools >= 30.4'],
-    version=version(2, 0, localversion=localversion),
+    version=version(2, 1, localversion=localversion),
 )

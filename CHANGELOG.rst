@@ -1,8 +1,13 @@
 Changelog
 =========
 
+2.1
+---
+
+* Add support python 3.13
+
 2.0
-----
+---
 
 * Add support python 3.11 and 3.12
 * Drop support python 3.5 and 3.6
@@ -11,23 +16,23 @@ Changelog
 * Migrate pylava -> pylama
 
 1.2
-----
+---
 
 * Add support python 3.10
 * Fix example
 
 1.1
-----
+---
 
 * Add support python 3.9
 
 1.0
-----
+---
 
 * Add support python 3.8
 
 0.12
-------
+----
 
 * Add support python 3.7
 * Fix tests and build

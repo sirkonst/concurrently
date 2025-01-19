@@ -11,7 +11,7 @@ from . import EngineTest, paramz_conc_count, paramz_data_count
 
 def process(data):
     time.sleep(data)
-    return time.time()
+    return time.monotonic()
 
 
 class TestAsyncIOThreadEngine(EngineTest):
@@ -24,7 +24,7 @@ class TestAsyncIOThreadEngine(EngineTest):
         for d in data:
             q_data.put(d)
         q_results = Queue()
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(conc_count, engine=AsyncIOThreadEngine)
         def _parallel():
@@ -54,7 +54,7 @@ class TestAsyncIOThreadEngine(EngineTest):
         data = range(3)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=AsyncIOThreadEngine)
         def _parallel():
@@ -90,7 +90,7 @@ class TestAsyncIOThreadEngine(EngineTest):
         data = range(2)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=AsyncIOThreadEngine)
         def _parallel():

@@ -10,7 +10,7 @@ from . import EngineTest, paramz_conc_count, paramz_data_count
 
 async def process(data):
     await asyncio.sleep(data)
-    return time.time()
+    return time.monotonic()
 
 
 class TestAsyncIOEngine(EngineTest):
@@ -21,7 +21,7 @@ class TestAsyncIOEngine(EngineTest):
         data = range(data_count)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(conc_count, engine=AsyncIOEngine)
         async def _parallel():
@@ -46,7 +46,7 @@ class TestAsyncIOEngine(EngineTest):
         data = range(3)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=AsyncIOEngine)
         async def _parallel():
@@ -82,7 +82,7 @@ class TestAsyncIOEngine(EngineTest):
         data = range(2)
         i_data = iter(data)
         results = {}
-        start_time = time.time()
+        start_time = time.monotonic()
 
         @concurrently(2, engine=AsyncIOEngine)
         async def _parallel():
